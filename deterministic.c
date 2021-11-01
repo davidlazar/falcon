@@ -8,7 +8,10 @@ int falcon_det1024_keygen(shake256_context *rng, void *privkey, void *pubkey) {
 	size_t tmpkg_len = FALCON_TMPSIZE_KEYGEN(FALCON_DET1024_LOGN);
 	uint8_t tmpkg[tmpkg_len];
 
-	return falcon_keygen_make(rng, FALCON_DET1024_LOGN, privkey, FALCON_DET1024_PRIVKEY_SIZE, pubkey, FALCON_DET1024_PUBKEY_SIZE, tmpkg, tmpkg_len);
+	return falcon_keygen_make(rng, FALCON_DET1024_LOGN,
+		privkey, FALCON_DET1024_PRIVKEY_SIZE,
+		pubkey, FALCON_DET1024_PUBKEY_SIZE,
+		tmpkg, tmpkg_len);
 }
 
 uint8_t falcon_det1024_nonce[40] = {"FALCON_DET1024"};
@@ -36,7 +39,9 @@ int falcon_det1024_sign(void *sig, const void *privkey, const void *data, size_t
 	shake256_inject(&hd, falcon_det1024_nonce, 40);
 	shake256_inject(&hd, data, data_len);
 
-	int r = falcon_sign_dyn_finish(&detrng, fullsig, &siglen, FALCON_SIG_PADDED, privkey, FALCON_DET1024_PRIVKEY_SIZE, &hd, falcon_det1024_nonce, tmpsd, tmpsd_len);
+	int r = falcon_sign_dyn_finish(&detrng, fullsig, &siglen,
+		FALCON_SIG_PADDED, privkey, FALCON_DET1024_PRIVKEY_SIZE,
+		&hd, falcon_det1024_nonce, tmpsd, tmpsd_len);
 	if (r != 0) {
 		return r;
 	}
@@ -65,5 +70,7 @@ int falcon_det1024_verify(const void *sig, const void *pubkey, const void *data,
 	memcpy(fullsig+1, falcon_det1024_nonce, 40);
 	memcpy(fullsig+41, sigbytes+2, siglen-41);
 
-	return falcon_verify(fullsig, siglen, FALCON_SIG_PADDED, pubkey, FALCON_DET1024_PUBKEY_SIZE, data, data_len, tmpvv, tmpvv_len);
+	return falcon_verify(fullsig, siglen, FALCON_SIG_PADDED,
+		pubkey, FALCON_DET1024_PUBKEY_SIZE, data, data_len,
+		tmpvv, tmpvv_len);
 }
