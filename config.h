@@ -88,6 +88,8 @@
 #define FALCON_FPEMU   1
  */
 
+#define FALCON_FPEMU   1
+
 /*
  * Enable use of assembly for ARM Cortex-M4 CPU. By default, such
  * support will be used based on some autodection on the compiler
