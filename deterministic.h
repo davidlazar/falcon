@@ -40,19 +40,22 @@ int falcon_det1024_keygen(shake256_context *rng, void *privkey, void *pubkey);
 
 /*
  * Deterministically sign the data provided in buffer data[] (of length data_len bytes),
- * using the private key held in privkey[] (of length FALCON_DET1024_PRIVKEY_SIZE bytes).
+ * using the private key held in privkey[] (of length FALCON_DET1024_PRIVKEY_SIZE bytes)
+ * and the fixed nonce in falcon_det1024_nonce.
  *
  * The signature is written in sig[] (of length FALCON_DET1024_SIG_SIZE).
+ * The resulting signature is incompatible with standard (randomized) Falcon signatures:
+ * it uses an incompatible header byte and does not include the nonce.
  *
  * Returned value: 0 on success, or a negative error code.
  */
 int falcon_det1024_sign(void *sig, const void *privkey, const void *data, size_t data_len);
 
 /*
- * Verify the signature sig[] (of length FALCON_DET1024_SIG_SIZE bytes)
- * with regards to the provided public key pubkey[] (of length
- * FALCON_DET1024_PUBKEY_SIZE bytes) and the message data[] (of length
- * data_len bytes).
+ * Verify the deterministic (det1024) signature sig[] (of length
+ * FALCON_DET1024_SIG_SIZE bytes) with respect to the provided public key
+ * pubkey[] (of length FALCON_DET1024_PUBKEY_SIZE bytes) and the message
+ * data[] (of length data_len bytes).
  *
  * Returned value: 0 on success, or a negative error code.
  */
