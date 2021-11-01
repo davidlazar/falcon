@@ -46,7 +46,7 @@ int falcon_det1024_keygen(shake256_context *rng, void *privkey, void *pubkey);
  *
  * Returned value: 0 on success, or a negative error code.
  */
-int falcon_det1024_sign(uint8_t *sig, const void *privkey, const void *data, size_t data_len);
+int falcon_det1024_sign(void *sig, const void *privkey, const void *data, size_t data_len);
 
 /*
  * Verify the signature sig[] (of length FALCON_DET1024_SIG_SIZE bytes)
@@ -56,7 +56,7 @@ int falcon_det1024_sign(uint8_t *sig, const void *privkey, const void *data, siz
  *
  * Returned value: 0 on success, or a negative error code.
  */
-int falcon_det1024_verify(const uint8_t *sig, const void *pubkey, const void *data, size_t data_len);
+int falcon_det1024_verify(const void *sig, const void *pubkey, const void *data, size_t data_len);
 
 #ifdef __cplusplus
 }
