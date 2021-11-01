@@ -16,7 +16,7 @@ int falcon_det1024_keygen(shake256_context *rng, void *privkey, void *pubkey) {
 
 uint8_t falcon_det1024_nonce[40] = {"FALCON_DET1024"};
 
-int falcon_det1024_sign(void *sig, const void *privkey, const void *data, size_t data_len) {
+int falcon_det1024_sign(uint8_t *sig, const void *privkey, const void *data, size_t data_len) {
 	shake256_context detrng;
 	shake256_context hd;
 	size_t tmpsd_len = FALCON_TMPSIZE_SIGNDYN(FALCON_DET1024_LOGN);
@@ -46,29 +46,27 @@ int falcon_det1024_sign(void *sig, const void *privkey, const void *data, size_t
 		return r;
 	}
 
-	uint8_t *sigbytes = sig;
-	sigbytes[0] = FALCON_DET1024_SIG_PREFIX;
-	sigbytes[1] = fullsig[0];
-	memcpy(sigbytes+2, fullsig+41, siglen-41);
+	sig[0] = FALCON_DET1024_SIG_PREFIX;
+	sig[1] = fullsig[0];
+	memcpy(sig+2, fullsig+41, siglen-41);
 
 	return 0;
 }
 
-int falcon_det1024_verify(const void *sig, const void *pubkey, const void *data, size_t data_len) {
+int falcon_det1024_verify(const uint8_t *sig, const void *pubkey, const void *data, size_t data_len) {
 	size_t tmpvv_len = FALCON_TMPSIZE_VERIFY(FALCON_DET1024_LOGN);
 	uint8_t tmpvv[tmpvv_len];
 
 	size_t siglen = FALCON_SIG_PADDED_SIZE(FALCON_DET1024_LOGN);
 	uint8_t fullsig[siglen];
 
-	const uint8_t *sigbytes = sig;
-	if (sigbytes[0] != FALCON_DET1024_SIG_PREFIX) {
+	if (sig[0] != FALCON_DET1024_SIG_PREFIX) {
 		return FALCON_ERR_BADSIG;
 	}
 
-	fullsig[0] = sigbytes[1];
+	fullsig[0] = sig[1];
 	memcpy(fullsig+1, falcon_det1024_nonce, 40);
-	memcpy(fullsig+41, sigbytes+2, siglen-41);
+	memcpy(fullsig+41, sig+2, siglen-41);
 
 	return falcon_verify(fullsig, siglen, FALCON_SIG_PADDED,
 		pubkey, FALCON_DET1024_PUBKEY_SIZE, data, data_len,
