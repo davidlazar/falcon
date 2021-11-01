@@ -67,6 +67,7 @@ shake256_init_prng_from_seed(shake256_context *sc,
 {
 	shake256_init(sc);
 	shake256_inject(sc, seed, seed_len);
+	shake256_flip(sc);
 }
 
 /* see falcon.h */
@@ -80,6 +81,7 @@ shake256_init_prng_from_system(shake256_context *sc)
 	}
 	shake256_init(sc);
 	shake256_inject(sc, seed, sizeof seed);
+	shake256_flip(sc);
 	return 0;
 }
 
