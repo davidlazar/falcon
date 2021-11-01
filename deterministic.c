@@ -26,6 +26,7 @@ int falcon_det1024_sign(uint8_t *sig, const void *privkey, const void *data, siz
 	size_t siglen = FALCON_SIG_PADDED_SIZE(FALCON_DET1024_LOGN);
 	uint8_t fullsig[siglen];
 
+	// SHAKE(0 || logn || sk || data)
 	domain[0] = 0;
 	shake256_init(&detrng);
 	shake256_inject(&detrng, domain, 1);
