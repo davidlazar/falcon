@@ -16,10 +16,46 @@ extern "C" {
 #define FALCON_DET1024_SIG_SIZE FALCON_SIG_PADDED_SIZE(FALCON_DET1024_LOGN)-40+1
 #define FALCON_DET1024_SIG_PREFIX 0x80
 
+/*
+ * Fixed nonce used in deterministic signing.
+ */
 extern uint8_t falcon_det1024_nonce[40];
 
+/*
+ * Generate a new keypair.
+ *
+ * The source of randomness is the provided SHAKE256 context *rng, which
+ * must have been already initialized, seeded, and set to output mode (see
+ * shake256_init_prng_from_seed() and shake256_init_prng_from_system())
+ *
+ * The new private key is written in the buffer pointed to by privkey.
+ * The size of that buffer must be FALCON_DET1024_PRIVKEY_SIZE bytes.
+ *
+ * The new public key is written in the buffer pointed to by pubkey.
+ * The size of that buffer must be FALCON_DET1024_PUBKEY_SIZE bytes.
+ *
+ * Returned value: 0 on success, or a negative error code.
+ */
 int falcon_det1024_keygen(shake256_context *rng, void *privkey, void *pubkey);
+
+/*
+ * Deterministically sign the data provided in buffer data[] (of length data_len bytes),
+ * using the private key held in privkey[] (of length FALCON_DET1024_PRIVKEY_SIZE bytes).
+ *
+ * The signature is written in sig[] (of length FALCON_DET1024_SIG_SIZE).
+ *
+ * Returned value: 0 on success, or a negative error code.
+ */
 int falcon_det1024_sign(uint8_t *sig, const void *privkey, const void *data, size_t data_len);
+
+/*
+ * Verify the signature sig[] (of length FALCON_DET1024_SIG_SIZE bytes)
+ * with regards to the provided public key pubkey[] (of length
+ * FALCON_DET1024_PUBKEY_SIZE bytes) and the message data[] (of length
+ * data_len bytes).
+ *
+ * Returned value: 0 on success, or a negative error code.
+ */
 int falcon_det1024_verify(const uint8_t *sig, const void *pubkey, const void *data, size_t data_len);
 
 #ifdef __cplusplus
