@@ -16,6 +16,8 @@ extern "C" {
 #define FALCON_DET1024_SIG_SIZE FALCON_SIG_PADDED_SIZE(FALCON_DET1024_LOGN)-40+1
 #define FALCON_DET1024_SIG_PREFIX 0x80
 
+extern uint8_t falcon_det1024_nonce[40];
+
 int falcon_det1024_keygen(shake256_context *rng, void *privkey, void *pubkey);
 int falcon_det1024_sign(void *sig, const void *privkey, const void *data, size_t data_len);
 int falcon_det1024_verify(const void *sig, const void *pubkey, const void *data, size_t data_len);
