@@ -67,30 +67,6 @@
  */
 
 /*
- * Use emulated floating-point implementation.
- *
- * Emulation uses only integer operations with uint32_t and uint64_t
- * types. This is constant-time, provided that the underlying platform
- * offers constant-time opcodes for the following operations:
- *
- *  - Multiplication of two 32-bit unsigned integers into a 64-bit result.
- *  - Left-shift or right-shift of a 32-bit unsigned integer by a
- *    potentially secret shift count in the 0..31 range.
- *
- * Notably, the ARM Cortex M3 does not fulfill the first condition,
- * while the Pentium IV does not fulfill the second.
- *
- * If neither FALCON_FPNATIVE nor FALCON_FPEMU is defined, then use of
- * the native 'double' C type is the default behaviour unless
- * FALCON_ASM_CORTEXM4 is defined to 1, in which case the emulated code
- * will be used.
- *
-#define FALCON_FPEMU   1
- */
-
-#define FALCON_FPEMU   1
-
-/*
  * Enable use of assembly for ARM Cortex-M4 CPU. By default, such
  * support will be used based on some autodection on the compiler
  * version and target architecture. Define this variable to 1 to force

@@ -9,6 +9,35 @@
 extern "C" {
 #endif
 
+/*
+ * Use emulated floating-point implementation.
+ *
+ * Emulation uses only integer operations with uint32_t and uint64_t
+ * types. This is constant-time, provided that the underlying platform
+ * offers constant-time opcodes for the following operations:
+ *
+ *  - Multiplication of two 32-bit unsigned integers into a 64-bit result.
+ *  - Left-shift or right-shift of a 32-bit unsigned integer by a
+ *    potentially secret shift count in the 0..31 range.
+ *
+ * Notably, the ARM Cortex M3 does not fulfill the first condition,
+ * while the Pentium IV does not fulfill the second.
+ *
+ * We enable floating-point emulation in order to get reliable
+ * deterministic signing across supported platforms.
+ *
+ * **WARNING**: DO NOT DISABLE THIS FLAG! FP emulation is very
+ * important for ensuring truly deterministic signing across different
+ * platforms and configurations, i.e., the same message should always
+ * yield the same signature (under the same secret key).
+ *
+ * Non-determinism can lead to a CATASTROPHIC SECURITY FAILURE,
+ * potentially enabling an attacker to create forgeries for arbitrary
+ * messages after obtaining two or more different signatures for the
+ * same message (under the same secret key).
+ */
+#define FALCON_FPEMU   1
+
 #define FALCON_DET1024_LOGN 10
 #define FALCON_DET1024_PUBKEY_SIZE FALCON_PUBKEY_SIZE(FALCON_DET1024_LOGN)
 #define FALCON_DET1024_PRIVKEY_SIZE FALCON_PRIVKEY_SIZE(FALCON_DET1024_LOGN)
