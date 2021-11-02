@@ -33,6 +33,8 @@
 #ifndef FALCON_CONFIG_H__
 #define FALCON_CONFIG_H__
 
+/* WARNING: some of these options have been overridden in deterministic.h */
+
 /*
  * Each option is a macro which should be defined to either 1 or 0.
  * If any of the options below is left undefined, then a default value

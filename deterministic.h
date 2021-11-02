@@ -38,6 +38,13 @@ extern "C" {
  */
 #define FALCON_FPEMU   1
 
+/*
+ * Disable optimizations which can lead to non-determinism.
+ * See config.h for a description of these options.
+ */
+#define FALCON_FMA            0
+
+
 #define FALCON_DET1024_LOGN 10
 #define FALCON_DET1024_PUBKEY_SIZE FALCON_PUBKEY_SIZE(FALCON_DET1024_LOGN)
 #define FALCON_DET1024_PRIVKEY_SIZE FALCON_PRIVKEY_SIZE(FALCON_DET1024_LOGN)
