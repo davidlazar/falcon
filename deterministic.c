@@ -36,6 +36,7 @@ int falcon_det1024_sign(void *sig, const void *privkey, const void *data, size_t
 	shake256_inject(&detrng, data, data_len);
 	shake256_flip(&detrng);
 
+	// SHAKE(nonce || data)
 	shake256_init(&hd);
 	shake256_inject(&hd, falcon_det1024_nonce, 40);
 	shake256_inject(&hd, data, data_len);
