@@ -23,19 +23,18 @@ the motivation for, and specification of, the deterministic mode, see
 **LINK**.
 
 This implementation is written in C and is configurable at compile
-time through macros which are documented in config.h and
-deterministic.h; each macro is a boolean option and can be enabled or
-disabled in config.h and/or as a command-line parameter to the
-compiler. Several implementation strategies are available; however, in
-all cases, the same API is implemented.
+time through macros which are documented in config.h; each macro is a
+boolean option and can be enabled or disabled in config.h and/or as a
+command-line parameter to the compiler. Several implementation
+strategies are available; however, in all cases, the same API is
+implemented.
 
 *** CRITICAL SECURITY WARNING ***
 
 For robust determinism across supported devices, which is needed to
 prevent a potential catastrophic security failure in the deterministic
 mode, it is STRONGLY RECOMMENDED that the following macro settings be
-used, as is done in deterministic.h (see that file for further
-details):
+used, as is done in config.h (see that file for further details):
 
   - floating-point emulation (FALCON_FPEMU) should be enabled, in lieu
     of native FP operations.
@@ -49,8 +48,8 @@ details):
     determinism on the relevant signing devices.
 
 (According to the documentation below, FALCOM_FMA and FALCON_AVX2 have
-no effect when FALCON_FPEMU is enabled, but in deterministic.h they
-are explicitly disabled as a defensive measure.)
+no effect when FALCON_FPEMU is enabled, but in config.h they are
+explicitly disabled as a defensive measure.)
 
 *** END CRITICAL SECURITY WARNING ***
 
