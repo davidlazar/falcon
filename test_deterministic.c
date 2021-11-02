@@ -87,16 +87,17 @@ void test_inner(size_t data_len) {
 		exit(EXIT_FAILURE);
 	}
 
-	/*
+        /*
 	// For generating test_deterministic_kat.h
 	printf("\t\"");
-	for (int i = 0; i < FALCON_DET1024_SIG_SIZE; i++) {
+	for (unsigned int i = 0; i < FALCON_DET1024_SIG_SIZE; i++) {
 		printf("%02x", sig[i]);
 	}
 	printf("\",\n");
-	*/
+        */
 
-	hextobin(expected_sig, FALCON_DET1024_SIG_SIZE, FALCON_DET1024_KAT[data_len-1]);
+        // when not generating test_deterministic_kat.h
+	hextobin(expected_sig, FALCON_DET1024_SIG_SIZE, FALCON_DET1024_KAT[data_len]);
 	if (memcmp(sig, expected_sig, FALCON_DET1024_SIG_SIZE) != 0) {
 		fprintf(stderr, "sign_det1024 (data_len=%zu) does not match KAT\n", data_len);
 		exit(EXIT_FAILURE);
@@ -104,9 +105,16 @@ void test_inner(size_t data_len) {
 }
 
 int main() {
+        // For generating test_deterministic_kat.h
 	//printf("\nstatic const char *const FALCON_DET1024_KAT[] = {\n");
-	for (int i = 1; i <= 512; i++) {
+
+	for (int i = 0; i < 512; i++) {
 		test_inner(i);
 	}
+
+	// For generating test_deterministic_kat.h
 	//printf("};\n");
+
+        // when not generating test_deterministic_kat.h
+        printf("All known-answer tests (KATs) pass.");
 }
