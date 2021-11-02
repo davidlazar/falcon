@@ -23,28 +23,69 @@ extern "C" {
  * Notably, the ARM Cortex M3 does not fulfill the first condition,
  * while the Pentium IV does not fulfill the second.
  *
- * We enable floating-point emulation in order to get reliable
- * deterministic signing across supported platforms.
+ * *** CRITICAL SECURITY WARNING ***:
+ * 
+ * Floating-point emulation is enabled in order to get reliable
+ * deterministic signing across supported platforms, because native
+ * floating-point units and code optimizations may yield slight
+ * discrepancies that could affect determinism.
  *
- * **WARNING**: DO NOT DISABLE THIS FLAG! FP emulation is very
- * important for ensuring truly deterministic signing across different
- * platforms and configurations, i.e., the same message should always
- * yield the same signature (under the same secret key).
+ * KEEPING FALCON_FPEMU ENABLED IS STRONGLY RECOMMENDED! Emulation is
+ * important for obtaining truly deterministic signing across
+ * different platforms and configurations, i.e., the same message
+ * should always yield the same signature (under the same secret key).
  *
- * Non-determinism can lead to a CATASTROPHIC SECURITY FAILURE,
- * potentially enabling an attacker to create forgeries for arbitrary
- * messages after obtaining two or more different signatures for the
- * same message (under the same secret key).
+ * Any non-determinism in signing can lead to a CATASTROPHIC SECURITY
+ * FAILURE, potentially enabling an attacker to create forgeries for
+ * arbitrary messages after obtaining two or more different signatures
+ * for the same message (under the same secret key).
+ *
+ * Determinism can be sanity-checked (but not guaranteed) using the
+ * provided KATs. Any deviation from the expected results indicates a
+ * lack of determinism, but agreement does not prove determinism for
+ * all possible inputs.
  */
-#define FALCON_FPEMU   1
+#define FALCON_FPEMU  1
+
+/* 
+ * Explicitly disable native floating-point operations. (These are
+ * already implicitly disabled by enabling FALCON_FPEMU above; here it
+ * is made explicit as a defensive measure.)
+ */
+#define FALCON_FPNATIVE  0
 
 /*
- * Disable optimizations which can lead to non-determinism.
- * See config.h for a description of these options.
+ * Explicitly disable "fused multiply-add" optimizations, which are
+ * KNOWN to lead to non-determinism in some cases. (These are already
+ * implicitly disabled by enabling FALCON_FPEMU above; here it is made
+ * explicit as a defensive measure.)
+ *
+ * WARNING: IT IS STRONGLY RECOMMENDED *NOT* TO ENABLE BOTH FALCON_FPU
+ * AND FALCON_FMA. DOING SO LEADS TO DEMONSTRATED NON-DETERMINISM.
  */
-#define FALCON_FMA            0
+#define FALCON_FMA  0
 
+/*
+ * Explicitly disable AVX2 optimizations. (These are already
+ * implicitly disabled by enabling FALCON_FPEMU above; here it is made
+ * explicit as a defensive measure.)
+ * 
+ * While we are not aware of any way that AVX2 optimizations could
+ * lead to non-determinism, caution should be exercised if they are
+ * ever under consideration for usage. (At minimum, check KATs.)
+ */
+#define FALCON_AVX2  0
 
+/*
+ * Explicitly disable the specialized assembly code for ARM Cortex-M4.
+ * 
+ * While we are not aware of any way that the assembly code could lead
+ * to non-determinism, caution should be exercised if it is ever under
+ * consideration for usage. (At minimum, check KATs.)
+ */
+#define FALCON_ASM_CORTEXM4  0
+
+  
 #define FALCON_DET1024_LOGN 10
 #define FALCON_DET1024_PUBKEY_SIZE FALCON_PUBKEY_SIZE(FALCON_DET1024_LOGN)
 #define FALCON_DET1024_PRIVKEY_SIZE FALCON_PRIVKEY_SIZE(FALCON_DET1024_LOGN)
