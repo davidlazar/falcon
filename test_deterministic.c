@@ -6,6 +6,9 @@
 #include "deterministic.h"
 #include "test_deterministic_kat.h"
 
+// enable in order to generate KATs (pipe output to test_deterministic_kat.h)
+// #define GENERATE_KATS 1
+
 // Copied from test_falcon.c
 static size_t
 hextobin(uint8_t *buf, size_t max_len, const char *src)
@@ -87,34 +90,39 @@ void test_inner(size_t data_len) {
 		exit(EXIT_FAILURE);
 	}
 
-        /*
-	// For generating test_deterministic_kat.h
+#ifdef GENERATE_KATS            /* print the KAT */
 	printf("\t\"");
 	for (unsigned int i = 0; i < FALCON_DET1024_SIG_SIZE; i++) {
 		printf("%02x", sig[i]);
 	}
 	printf("\",\n");
-        */
-
-        // when not generating test_deterministic_kat.h
+#else  /* compare to the KAT */
 	hextobin(expected_sig, FALCON_DET1024_SIG_SIZE, FALCON_DET1024_KAT[data_len]);
 	if (memcmp(sig, expected_sig, FALCON_DET1024_SIG_SIZE) != 0) {
 		fprintf(stderr, "sign_det1024 (data_len=%zu) does not match KAT\n", data_len);
 		exit(EXIT_FAILURE);
 	}
+#endif
 }
 
 int main() {
-        // For generating test_deterministic_kat.h
-	//printf("\nstatic const char *const FALCON_DET1024_KAT[] = {\n");
+#ifdef GENERATE_KATS
+	printf("\nstatic const char *const FALCON_DET1024_KAT[] = {\n");
+#endif
 
 	for (int i = 0; i < 512; i++) {
 		test_inner(i);
+#ifndef GENERATE_KATS
+                printf(".");
+                fflush(stdout);
+#endif
 	}
 
-	// For generating test_deterministic_kat.h
-	//printf("};\n");
+#ifdef GENERATE_KATS
+	printf("};\n");
+#endif
 
-        // when not generating test_deterministic_kat.h
-        printf("All known-answer tests (KATs) pass.");
+#ifndef GENERATE_KATS
+        printf("\nAll known-answer tests (KATs) pass.\n");
+#endif
 }
