@@ -64,9 +64,11 @@ int falcon_det1024_verify(const void *sig, const void *pubkey, const void *data,
 	uint8_t fullsig[siglen];
 
 	const uint8_t *sigbytes = sig;
+	// det1024 signatures must start with the prefix byte:
 	if (sigbytes[0] != FALCON_DET1024_SIG_PREFIX) {
 		return FALCON_ERR_BADSIG;
 	}
+	// det1024 expects a padded signature with n=1024:
 	if (sigbytes[1] != FALCON_DET1024_SIG_HEADER) {
 		return FALCON_ERR_BADSIG;
 	}
