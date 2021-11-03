@@ -19,12 +19,12 @@ extern "C" {
 #define FALCON_DET1024_SIG_HEADER 0x3A
 
 /*
- * Fixed nonce used in deterministic signing.
+ * Fixed nonce used in deterministic signing (for n=1024).
  */
 extern uint8_t falcon_det1024_nonce[40];
 
 /*
- * Generate a keypair.
+ * Generate a keypair (for Falcon parameter n=1024).
  *
  * The source of randomness is the provided SHAKE256 context *rng,
  * which must have been already initialized, seeded, and set to output
@@ -42,27 +42,42 @@ extern uint8_t falcon_det1024_nonce[40];
 int falcon_det1024_keygen(shake256_context *rng, void *privkey, void *pubkey);
 
 /*
- * Deterministically sign the data provided in buffer data[] (of length data_len bytes),
- * using the private key held in privkey[] (of length FALCON_DET1024_PRIVKEY_SIZE bytes)
- * and the fixed nonce in falcon_det1024_nonce.
+ * Deterministically sign the data provided in buffer data[] (of
+ * length data_len bytes), using the private key held in privkey[] (of
+ * length FALCON_DET1024_PRIVKEY_SIZE bytes). The signature is written
+ * in sig[] (of length FALCON_DET1024_SIG_SIZE).
  *
- * The signature is written in sig[] (of length FALCON_DET1024_SIG_SIZE).
- * The resulting signature is incompatible with standard (randomized) Falcon signatures:
- * it uses an incompatible header byte and does not include the nonce.
+ * The resulting signature is incompatible with randomized ("salted")
+ * Falcon signatures: it includes an additional prefix byte, and does
+ * not include the salt (nonce). See the "Deterministic Falcon"
+ * specification for further details.
+ *
+ * This function implements only the following subset of the
+ * specification:
+ * 
+ *   -- the parameter n is fixed to n=1024, and
+ *   -- the signature format is fixed to "padded".
  *
  * Returned value: 0 on success, or a negative error code.
  */
-int falcon_det1024_sign(void *sig, const void *privkey, const void *data, size_t data_len);
+int falcon_det1024_sign(void *sig, const void *privkey,
+                        const void *data, size_t data_len);
 
 /*
- * Verify the deterministic (det1024) signature sig[] (of length
- * FALCON_DET1024_SIG_SIZE bytes) with respect to the provided public key
- * pubkey[] (of length FALCON_DET1024_PUBKEY_SIZE bytes) and the message
- * data[] (of length data_len bytes).
+ * Verify the deterministic (det1024) signature provided in sig[] (of
+ * length FALCON_DET1024_SIG_SIZE bytes) with respect to the public
+ * key provided in pubkey[] (of length FALCON_DET1024_PUBKEY_SIZE
+ * bytes) and the data provided in data[] (of length data_len bytes).
+ *
+ * This function accepts a strict subset of valid deterministic Falcon
+ * signatures, namely, only those having n=1024 and "padded" signature
+ * format (thus matching the choices implemented by
+ * falcon_det1024_sign).
  *
  * Returned value: 0 on success, or a negative error code.
  */
-int falcon_det1024_verify(const void *sig, const void *pubkey, const void *data, size_t data_len);
+int falcon_det1024_verify(const void *sig, const void *pubkey,
+                          const void *data, size_t data_len);
 
 #ifdef __cplusplus
 }
