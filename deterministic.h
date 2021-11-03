@@ -24,16 +24,17 @@ extern "C" {
 extern uint8_t falcon_det1024_nonce[40];
 
 /*
- * Generate a new keypair.
+ * Generate a keypair.
  *
- * The source of randomness is the provided SHAKE256 context *rng, which
- * must have been already initialized, seeded, and set to output mode (see
- * shake256_init_prng_from_seed() and shake256_init_prng_from_system())
+ * The source of randomness is the provided SHAKE256 context *rng,
+ * which must have been already initialized, seeded, and set to output
+ * mode (see shake256_init_prng_from_seed() and
+ * shake256_init_prng_from_system()).
  *
- * The new private key is written in the buffer pointed to by privkey.
+ * The private key is written in the buffer pointed to by privkey.
  * The size of that buffer must be FALCON_DET1024_PRIVKEY_SIZE bytes.
  *
- * The new public key is written in the buffer pointed to by pubkey.
+ * The public key is written in the buffer pointed to by pubkey.
  * The size of that buffer must be FALCON_DET1024_PUBKEY_SIZE bytes.
  *
  * Returned value: 0 on success, or a negative error code.
