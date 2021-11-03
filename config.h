@@ -62,7 +62,7 @@
 
 /*
  * *** CRITICAL SECURITY WARNING ***:
- * 
+ *
  * Here floating-point emulation is enabled in order to get reliable
  * deterministic signing, because native floating-point units and code
  * optimizations may yield slight discrepancies that could affect
@@ -108,7 +108,7 @@
  *
  */
 
-/* 
+/*
  * For determinism, explicitly disable native floating-point
  * operations. (These are already implicitly disabled by enabling
  * FALCON_FPEMU above; here it is made explicit as a defensive
@@ -140,7 +140,7 @@
 
 /*
  * Explicitly disable the specialized assembly code for ARM Cortex-M4.
- * 
+ *
  * While we are not aware of any way that the assembly code could lead
  * to non-determinism, caution should be exercised if it is ever under
  * consideration for usage. (At minimum, check KATs.)
@@ -161,7 +161,7 @@
  * Explicitly disable AVX2 optimizations. (These are already
  * implicitly disabled by enabling FALCON_FPEMU above; here it is made
  * explicit as a defensive measure.)
- * 
+ *
  * While we are not aware of any way that AVX2 optimizations could
  * lead to non-determinism, caution should be exercised if they are
  * ever under consideration for usage. (At minimum, check KATs.)
