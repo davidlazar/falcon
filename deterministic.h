@@ -16,6 +16,7 @@ extern "C" {
 // Drop the 40 byte nonce and add a prefix byte:
 #define FALCON_DET1024_SIG_SIZE FALCON_SIG_PADDED_SIZE(FALCON_DET1024_LOGN)-40+1
 #define FALCON_DET1024_SIG_PREFIX 0x80
+#define FALCON_DET1024_SIG_HEADER 0x3A
 
 /*
  * Fixed nonce used in deterministic signing.

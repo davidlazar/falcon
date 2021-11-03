@@ -67,6 +67,9 @@ int falcon_det1024_verify(const void *sig, const void *pubkey, const void *data,
 	if (sigbytes[0] != FALCON_DET1024_SIG_PREFIX) {
 		return FALCON_ERR_BADSIG;
 	}
+	if (sigbytes[1] != FALCON_DET1024_SIG_HEADER) {
+		return FALCON_ERR_BADSIG;
+	}
 
 	fullsig[0] = sigbytes[1];
 	memcpy(fullsig+1, falcon_det1024_nonce, 40);
