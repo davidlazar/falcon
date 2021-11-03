@@ -54,7 +54,7 @@ int falcon_det1024_keygen(shake256_context *rng, void *privkey, void *pubkey);
  *
  * This function implements only the following subset of the
  * specification:
- * 
+ *
  *   -- the parameter n is fixed to n=1024, and
  *   -- the signature format is fixed to "padded".
  *

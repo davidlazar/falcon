@@ -113,16 +113,14 @@ int main() {
 	for (int i = 0; i < 512; i++) {
 		test_inner(i);
 #ifndef GENERATE_KATS
-                printf(".");
-                fflush(stdout);
+		printf(".");
+		fflush(stdout);
 #endif
 	}
 
 #ifdef GENERATE_KATS
 	printf("};\n");
-#endif
-
-#ifndef GENERATE_KATS
-        printf("\nAll known-answer tests (KATs) pass.\n");
+#else
+	printf("\nAll known-answer tests (KATs) pass.\n");
 #endif
 }
