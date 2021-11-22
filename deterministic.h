@@ -13,10 +13,13 @@ extern "C" {
 #define FALCON_DET1024_PUBKEY_SIZE FALCON_PUBKEY_SIZE(FALCON_DET1024_LOGN)
 #define FALCON_DET1024_PRIVKEY_SIZE FALCON_PRIVKEY_SIZE(FALCON_DET1024_LOGN)
 // Drop the 40 byte nonce and add a prefix byte:
-#define FALCON_DET1024_SIG_SIZE FALCON_SIG_PADDED_SIZE(FALCON_DET1024_LOGN)-40+1
+#define FALCON_DET1024_SIG_COMPRESSED_MAXSIZE FALCON_SIG_COMPRESSED_MAXSIZE(FALCON_DET1024_LOGN)-40+1
+#define FALCON_DET1024_SIG_CT_SIZE FALCON_SIG_CT_SIZE(FALCON_DET1024_LOGN)-40+1
+
 #define FALCON_DET1024_SIG_PREFIX 0x80
-// The header corresponds to a padded signature with n=1024:
-#define FALCON_DET1024_SIG_HEADER 0x3A
+// The header corresponds to a compressed signature with n=1024:
+#define FALCON_DET1024_SIG_COMPRESSED_HEADER 0x3A
+#define FALCON_DET1024_SIG_CT_HEADER 0x5A
 
 /*
  * Fixed nonce used in deterministic signing (for n=1024).
@@ -55,13 +58,12 @@ int falcon_det1024_keygen(shake256_context *rng, void *privkey, void *pubkey);
  * This function implements only the following subset of the
  * specification:
  *
- *   -- the parameter n is fixed to n=1024, and
- *   -- the signature format is fixed to "padded".
+ *   -- the parameter n is fixed to n=1024
  *
  * Returned value: 0 on success, or a negative error code.
  */
-int falcon_det1024_sign(void *sig, const void *privkey,
-                        const void *data, size_t data_len);
+int falcon_det1024_sign_compressed(void *sig, size_t *sig_len,
+	const void *privkey, const void *data, size_t data_len);
 
 /*
  * Verify the deterministic (det1024) signature provided in sig[] (of
@@ -70,14 +72,17 @@ int falcon_det1024_sign(void *sig, const void *privkey,
  * bytes) and the data provided in data[] (of length data_len bytes).
  *
  * This function accepts a strict subset of valid deterministic Falcon
- * signatures, namely, only those having n=1024 and "padded" signature
+ * signatures, namely, only those having n=1024 and "compressed" signature
  * format (thus matching the choices implemented by
- * falcon_det1024_sign).
+ * falcon_det1024_sign_compressed).
  *
  * Returned value: 0 on success, or a negative error code.
  */
-int falcon_det1024_verify(const void *sig, const void *pubkey,
-                          const void *data, size_t data_len);
+int falcon_det1024_verify_compressed(const void *sig, size_t sig_len,
+	const void *pubkey, const void *data, size_t data_len);
+
+int falcon_det1024_verify_ct(const void *sig, const void *pubkey, const void *data, size_t data_len);
+int falcon_det1024_sig_compressed_to_ct(void *sig_ct, const void *sig_compressed, size_t sig_compressed_len);
 
 #ifdef __cplusplus
 }
