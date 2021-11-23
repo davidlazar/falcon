@@ -12,19 +12,16 @@ extern "C" {
 #define FALCON_DET1024_LOGN 10
 #define FALCON_DET1024_PUBKEY_SIZE FALCON_PUBKEY_SIZE(FALCON_DET1024_LOGN)
 #define FALCON_DET1024_PRIVKEY_SIZE FALCON_PRIVKEY_SIZE(FALCON_DET1024_LOGN)
-// Drop the 40 byte nonce and add a prefix byte:
+// Replace the 40 byte nonce with a salt version byte:
 #define FALCON_DET1024_SIG_COMPRESSED_MAXSIZE FALCON_SIG_COMPRESSED_MAXSIZE(FALCON_DET1024_LOGN)-40+1
 #define FALCON_DET1024_SIG_CT_SIZE FALCON_SIG_CT_SIZE(FALCON_DET1024_LOGN)-40+1
 
-#define FALCON_DET1024_SIG_PREFIX 0x80
-// The header corresponds to a compressed signature with n=1024:
-#define FALCON_DET1024_SIG_COMPRESSED_HEADER 0x3A
-#define FALCON_DET1024_SIG_CT_HEADER 0x5A
+// The header corresponds to a compressed signature with n=1024 and MSB=1:
+#define FALCON_DET1024_SIG_COMPRESSED_HEADER (0x3A | 0x80)
+#define FALCON_DET1024_SIG_CT_HEADER (0x5A | 0x80)
 
-/*
- * Fixed nonce used in deterministic signing (for n=1024).
- */
-extern uint8_t falcon_det1024_nonce[40];
+// This version should be incremented with any changes to the signing algorithm.
+#define FALCON_DET1024_CURRENT_SALT_VERSION 0
 
 /*
  * Generate a keypair (for Falcon parameter n=1024).
@@ -47,13 +44,14 @@ int falcon_det1024_keygen(shake256_context *rng, void *privkey, void *pubkey);
 /*
  * Deterministically sign the data provided in buffer data[] (of
  * length data_len bytes), using the private key held in privkey[] (of
- * length FALCON_DET1024_PRIVKEY_SIZE bytes). The signature is written
- * in sig[] (of length FALCON_DET1024_SIG_SIZE).
+ * length FALCON_DET1024_PRIVKEY_SIZE bytes). The compressed, variable-length
+ * signature is written in sig[] (which should be at least
+ * FALCON_DET1024_SIG_COMPRESSED_MAXSIZE bytes); the signature length
+ * is written to sig_len.
  *
  * The resulting signature is incompatible with randomized ("salted")
- * Falcon signatures: it includes an additional prefix byte, and does
- * not include the salt (nonce). See the "Deterministic Falcon"
- * specification for further details.
+ * Falcon signatures: it excludes the salt (nonce) and adds a salt version
+ * byte. See the "Deterministic Falcon" specification for further details.
  *
  * This function implements only the following subset of the
  * specification:
@@ -66,10 +64,10 @@ int falcon_det1024_sign_compressed(void *sig, size_t *sig_len,
 	const void *privkey, const void *data, size_t data_len);
 
 /*
- * Verify the deterministic (det1024) signature provided in sig[] (of
- * length FALCON_DET1024_SIG_SIZE bytes) with respect to the public
- * key provided in pubkey[] (of length FALCON_DET1024_PUBKEY_SIZE
- * bytes) and the data provided in data[] (of length data_len bytes).
+ * Verify the compressed deterministic (det1024) signature provided in sig[]
+ * (of length sig_len bytes) with respect to the public key provided in
+ * pubkey[] (of length FALCON_DET1024_PUBKEY_SIZE bytes) and the data
+ * provided in data[] (of length data_len bytes).
  *
  * This function accepts a strict subset of valid deterministic Falcon
  * signatures, namely, only those having n=1024 and "compressed" signature
@@ -81,8 +79,26 @@ int falcon_det1024_sign_compressed(void *sig, size_t *sig_len,
 int falcon_det1024_verify_compressed(const void *sig, size_t sig_len,
 	const void *pubkey, const void *data, size_t data_len);
 
+/*
+ * Verify the deterministic (det1024) signature provided in sig[] (of
+ * length FALCON_DET1024_SIG_CT_SIZE bytes) with respect to the public key
+ * provided in pubkey[] (of length FALCON_DET1024_PUBKEY_SIZE bytes) and the
+ * data provided in data[] (of length data_len bytes).
+ *
+ * This function accepts a strict subset of valid deterministic Falcon
+ * signatures, namely, only those having n=1024 and "CT" signature
+ * format.
+ *
+ * Returned value: 0 on success, or a negative error code.
+ */
 int falcon_det1024_verify_ct(const void *sig, const void *pubkey, const void *data, size_t data_len);
-int falcon_det1024_sig_compressed_to_ct(void *sig_ct, const void *sig_compressed, size_t sig_compressed_len);
+
+/*
+ * Convert the compressed det1024 signature in sig_compressed
+ * (of length sig_compressed_len bytes) to CT format. The resulting CT
+ * signature is written to sig_ct (of length FALCON_DET1024_SIG_CT_SIZE bytes).
+ */
+int falcon_det1024_convert_compressed_to_ct(void *sig_ct, const uint8_t *sig_compressed, size_t sig_compressed_len);
 
 #ifdef __cplusplus
 }

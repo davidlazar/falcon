@@ -15,57 +15,67 @@ int falcon_det1024_keygen(shake256_context *rng, void *privkey, void *pubkey) {
 		tmpkg, tmpkg_len);
 }
 
-uint8_t falcon_det1024_nonce[40] = {"FALCON_DET1024"};
+uint8_t falcon_det1024_salt_rest[38] = {"FALCON_DET"};
+
+void falcon_det1024_write_salt(uint8_t dst[40], uint8_t salt_version, uint8_t logn) {
+	dst[0] = salt_version;
+	dst[1] = logn;
+	memcpy(dst+2, falcon_det1024_salt_rest, 38);
+}
 
 int falcon_det1024_sign_compressed(void *sig, size_t *sig_len, const void *privkey, const void *data, size_t data_len) {
 	shake256_context detrng;
 	shake256_context hd;
 	size_t tmpsd_len = FALCON_TMPSIZE_SIGNDYN(FALCON_DET1024_LOGN);
 	uint8_t tmpsd[tmpsd_len];
-	uint8_t domain[1], logn[1];
+	uint8_t logn[1] = {FALCON_DET1024_LOGN};
+	uint8_t salt[40];
 
-	size_t fullsig_len = FALCON_SIG_COMPRESSED_MAXSIZE(FALCON_DET1024_LOGN);
-	uint8_t fullsig[fullsig_len];
+	size_t saltedsig_len = FALCON_SIG_COMPRESSED_MAXSIZE(FALCON_DET1024_LOGN);
+	uint8_t saltedsig[saltedsig_len];
 
 	if (falcon_get_logn(privkey, FALCON_DET1024_PRIVKEY_SIZE) != FALCON_DET1024_LOGN) {
 		return FALCON_ERR_FORMAT;
 	}
 
-	// SHAKE(0 || logn || sk || data)
-	domain[0] = 0;
+	// SHAKE(logn || sk || data)
 	shake256_init(&detrng);
-	shake256_inject(&detrng, domain, 1);
-	logn[0] = FALCON_DET1024_LOGN;
 	shake256_inject(&detrng, logn, 1);
 	shake256_inject(&detrng, privkey, FALCON_DET1024_PRIVKEY_SIZE);
 	shake256_inject(&detrng, data, data_len);
 	shake256_flip(&detrng);
 
-	// SHAKE(nonce || data)
+	falcon_det1024_write_salt(salt, FALCON_DET1024_CURRENT_SALT_VERSION, FALCON_DET1024_LOGN);
+
+	// SHAKE(salt || data)
 	shake256_init(&hd);
-	shake256_inject(&hd, falcon_det1024_nonce, 40);
+	shake256_inject(&hd, salt, 40);
 	shake256_inject(&hd, data, data_len);
 
-	int r = falcon_sign_dyn_finish(&detrng, fullsig, &fullsig_len,
+	int r = falcon_sign_dyn_finish(&detrng, saltedsig, &saltedsig_len,
 		FALCON_SIG_COMPRESSED, privkey, FALCON_DET1024_PRIVKEY_SIZE,
-		&hd, falcon_det1024_nonce, tmpsd, tmpsd_len);
+		&hd, salt, tmpsd, tmpsd_len);
 	if (r != 0) {
 		return r;
 	}
 
 	uint8_t *sigbytes = sig;
-	sigbytes[0] = FALCON_DET1024_SIG_PREFIX;
-	sigbytes[1] = fullsig[0];
-	memcpy(sigbytes+2, fullsig+41, fullsig_len-41);
+	sigbytes[0] = saltedsig[0] | 0x80;
+	sigbytes[1] = FALCON_DET1024_CURRENT_SALT_VERSION;
+	memcpy(sigbytes+2, saltedsig+41, saltedsig_len-41);
 
-	*sig_len = fullsig_len-40+1;
+	*sig_len = saltedsig_len-40+1;
 
 	return 0;
 }
 
-int falcon_det1024_sig_compressed_to_ct(void *sig_ct, const void *sig_compressed, size_t sig_compressed_len) {
+int falcon_det1024_convert_compressed_to_ct(void *sig_ct, const uint8_t *sig_compressed, size_t sig_compressed_len) {
 	int16_t buf[1 << FALCON_DET1024_LOGN];
 	size_t v;
+
+	if (((uint8_t*)sig_compressed)[0] != FALCON_DET1024_SIG_COMPRESSED_HEADER) {
+		return FALCON_ERR_BADSIG;
+	}
 
 	v = Zf(comp_decode)(buf, FALCON_DET1024_LOGN, sig_compressed+2, sig_compressed_len-2);
 	if (v == 0) {
@@ -73,8 +83,8 @@ int falcon_det1024_sig_compressed_to_ct(void *sig_ct, const void *sig_compressed
 	}
 
 	uint8_t *sig = sig_ct;
-	sig[0] = FALCON_DET1024_SIG_PREFIX;
-	sig[1] = FALCON_DET1024_SIG_CT_HEADER;
+	sig[0] = FALCON_DET1024_SIG_CT_HEADER;
+	sig[1] = sig_compressed[1]; // copy the version byte
 	v = Zf(trim_i16_encode)(sig+2, FALCON_DET1024_SIG_CT_SIZE-2, buf, FALCON_DET1024_LOGN,
 		Zf(max_sig_bits)[FALCON_DET1024_LOGN]);
 	if (v == 0) {
@@ -84,27 +94,27 @@ int falcon_det1024_sig_compressed_to_ct(void *sig_ct, const void *sig_compressed
 	return 0;
 }
 
+void falcon_det1024_resalt(uint8_t *salted_sig, const uint8_t *unsalted_sig, size_t unsalted_sig_len) {
+	salted_sig[0] = unsalted_sig[0] & ~0x80; // Reset MSB to 0.
+	uint8_t salt_version = unsalted_sig[1];
+	falcon_det1024_write_salt(salted_sig+1, salt_version, FALCON_DET1024_LOGN);
+	memcpy(salted_sig+41, unsalted_sig+2, unsalted_sig_len-2);
+}
+
 int falcon_det1024_verify_compressed(const void *sig, size_t sig_len, const void *pubkey, const void *data, size_t data_len) {
 	size_t tmpvv_len = FALCON_TMPSIZE_VERIFY(FALCON_DET1024_LOGN);
 	uint8_t tmpvv[tmpvv_len];
 
-	size_t fullsig_len = sig_len + 40 - 1;
-	uint8_t fullsig[fullsig_len];
+	size_t salted_sig_len = sig_len + 40 - 1; // Add back the salt; drop the version byte.
+	uint8_t salted_sig[salted_sig_len];
 
-	const uint8_t *sigbytes = sig;
-	// det1024 signatures must start with the prefix byte:
-	if (sigbytes[0] != FALCON_DET1024_SIG_PREFIX) {
-		return FALCON_ERR_BADSIG;
-	}
-	if (sigbytes[1] != FALCON_DET1024_SIG_COMPRESSED_HEADER) {
+	if (((uint8_t*)sig)[0] != FALCON_DET1024_SIG_COMPRESSED_HEADER) {
 		return FALCON_ERR_BADSIG;
 	}
 
-	fullsig[0] = sigbytes[1];
-	memcpy(fullsig+1, falcon_det1024_nonce, 40);
-	memcpy(fullsig+41, sigbytes+2, fullsig_len-41);
+	falcon_det1024_resalt(salted_sig, sig, sig_len);
 
-	return falcon_verify(fullsig, fullsig_len, FALCON_SIG_COMPRESSED,
+	return falcon_verify(salted_sig, salted_sig_len, FALCON_SIG_COMPRESSED,
 		pubkey, FALCON_DET1024_PUBKEY_SIZE, data, data_len,
 		tmpvv, tmpvv_len);
 }
@@ -113,23 +123,16 @@ int falcon_det1024_verify_ct(const void *sig, const void *pubkey, const void *da
 	size_t tmpvv_len = FALCON_TMPSIZE_VERIFY(FALCON_DET1024_LOGN);
 	uint8_t tmpvv[tmpvv_len];
 
-	size_t fullsig_len = FALCON_SIG_CT_SIZE(FALCON_DET1024_LOGN);
-	uint8_t fullsig[fullsig_len];
+	size_t salted_sig_len = FALCON_SIG_CT_SIZE(FALCON_DET1024_LOGN);
+	uint8_t salted_sig[salted_sig_len];
 
-	const uint8_t *sigbytes = sig;
-	// det1024 signatures must start with the prefix byte:
-	if (sigbytes[0] != FALCON_DET1024_SIG_PREFIX) {
-		return FALCON_ERR_BADSIG;
-	}
-	if (sigbytes[1] != FALCON_DET1024_SIG_CT_HEADER) {
+	if (((uint8_t*)sig)[0] != FALCON_DET1024_SIG_CT_HEADER) {
 		return FALCON_ERR_BADSIG;
 	}
 
-	fullsig[0] = sigbytes[1];
-	memcpy(fullsig+1, falcon_det1024_nonce, 40);
-	memcpy(fullsig+41, sigbytes+2, fullsig_len-41);
+	falcon_det1024_resalt(salted_sig, sig, FALCON_DET1024_SIG_CT_SIZE);
 
-	return falcon_verify(fullsig, fullsig_len, FALCON_SIG_CT,
+	return falcon_verify(salted_sig, salted_sig_len, FALCON_SIG_CT,
 		pubkey, FALCON_DET1024_PUBKEY_SIZE, data, data_len,
 		tmpvv, tmpvv_len);
 }

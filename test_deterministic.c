@@ -82,19 +82,19 @@ void test_inner(size_t data_len) {
 	memset(sig, 0, FALCON_DET1024_SIG_COMPRESSED_MAXSIZE);
 	r = falcon_det1024_sign_compressed(sig, &sig_len, privkey, data, data_len);
 	if (r != 0) {
-		fprintf(stderr, "sign_det1024 failed: %d\n", r);
+		fprintf(stderr, "sign_compressed failed: %d\n", r);
 		exit(EXIT_FAILURE);
 	}
 
 	r = falcon_det1024_verify_compressed(sig, sig_len, pubkey, data, data_len);
 	if (r != 0) {
-		fprintf(stderr, "verify failed: %d\n", r);
+		fprintf(stderr, "verify_compressed failed: %d\n", r);
 		exit(EXIT_FAILURE);
 	}
 
-	r = falcon_det1024_sig_compressed_to_ct(sig_ct, sig, sig_len);
+	r = falcon_det1024_convert_compressed_to_ct(sig_ct, sig, sig_len);
 	if (r != 0) {
-		fprintf(stderr, "decompression failed: %d\n", r);
+		fprintf(stderr, "conversion failed: %d\n", r);
 		exit(EXIT_FAILURE);
 	}
 
