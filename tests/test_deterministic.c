@@ -6,6 +6,8 @@
 #include "../deterministic.h"
 #include "test_deterministic_kat.h"
 
+#define NUM_KATS 512
+
 // enable in order to generate KATs (pipe output to test_deterministic_kat.h)
 // #define GENERATE_KATS 1
 
@@ -57,11 +59,12 @@ hextobin(uint8_t *buf, size_t max_len, const char *src)
 	}
 }
 
+uint8_t ct_sigs[NUM_KATS][FALCON_DET1024_SIG_CT_SIZE];
+
 void test_inner(size_t data_len) {
 	uint8_t pubkey[FALCON_DET1024_PUBKEY_SIZE];
 	uint8_t privkey[FALCON_DET1024_PRIVKEY_SIZE];
 	uint8_t sig[FALCON_DET1024_SIG_COMPRESSED_MAXSIZE];
-	uint8_t sig_ct[FALCON_DET1024_SIG_CT_SIZE];
 	size_t sig_len;
 	uint8_t expected_sig[FALCON_DET1024_SIG_COMPRESSED_MAXSIZE];
 	uint8_t data[data_len];
@@ -92,13 +95,13 @@ void test_inner(size_t data_len) {
 		exit(EXIT_FAILURE);
 	}
 
-	r = falcon_det1024_convert_compressed_to_ct(sig_ct, sig, sig_len);
+	r = falcon_det1024_convert_compressed_to_ct(ct_sigs[data_len], sig, sig_len);
 	if (r != 0) {
 		fprintf(stderr, "conversion failed: %d\n", r);
 		exit(EXIT_FAILURE);
 	}
 
-	r = falcon_det1024_verify_ct(sig_ct, pubkey, data, data_len);
+	r = falcon_det1024_verify_ct(ct_sigs[data_len], pubkey, data, data_len);
 	if (r != 0) {
 		fprintf(stderr, "verify_ct failed: %d\n", r);
 		exit(EXIT_FAILURE);
@@ -106,18 +109,20 @@ void test_inner(size_t data_len) {
 
 #ifdef GENERATE_KATS            /* print the KAT */
 	printf("\t\"");
-	for (unsigned int i = 0; i < FALCON_DET1024_SIG_SIZE; i++) {
+	for (unsigned int i = 0; i < sig_len; i++) {
 		printf("%02x", sig[i]);
 	}
 	printf("\",\n");
 #else  /* compare to the KAT */
-/*
-	hextobin(expected_sig, FALCON_DET1024_SIG_SIZE, FALCON_DET1024_KAT[data_len]);
-	if (memcmp(sig, expected_sig, FALCON_DET1024_SIG_SIZE) != 0) {
+	size_t elen = hextobin(expected_sig, FALCON_DET1024_SIG_COMPRESSED_MAXSIZE, FALCON_DET1024_KAT[data_len]);
+	if (elen != sig_len) {
 		fprintf(stderr, "sign_det1024 (data_len=%zu) does not match KAT\n", data_len);
 		exit(EXIT_FAILURE);
 	}
-*/
+	if (memcmp(sig, expected_sig, sig_len) != 0) {
+		fprintf(stderr, "sign_det1024 (data_len=%zu) does not match KAT\n", data_len);
+		exit(EXIT_FAILURE);
+	}
 #endif
 }
 
@@ -126,7 +131,7 @@ int main() {
 	printf("\nstatic const char *const FALCON_DET1024_KAT[] = {\n");
 #endif
 
-	for (int i = 0; i < 512; i++) {
+	for (int i = 0; i < NUM_KATS; i++) {
 		test_inner(i);
 #ifndef GENERATE_KATS
 		printf(".");
@@ -135,8 +140,26 @@ int main() {
 	}
 
 #ifdef GENERATE_KATS
-	printf("};\n");
+	printf("};\n\n");
+	printf("\nstatic const char *const FALCON_DET1024_KAT_CT[] = {\n");
+	for (int kat = 0; kat < 32; kat++) {
+		printf("\t\"");
+		for (unsigned int i = 0; i < FALCON_DET1024_SIG_CT_SIZE; i++) {
+			printf("%02x", ct_sigs[kat][i]);
+		}
+		printf("\",\n");
+	}
+	printf("};\n\n");
 #else
+	uint8_t expected_sig_ct[FALCON_DET1024_SIG_CT_SIZE];
+	for (int kat = 0; kat < 32; kat++) {
+		hextobin(expected_sig_ct, FALCON_DET1024_SIG_CT_SIZE, FALCON_DET1024_KAT_CT[kat]);
+		if (memcmp(ct_sigs[kat], expected_sig_ct, FALCON_DET1024_SIG_CT_SIZE) != 0) {
+			fprintf(stderr, "sign_det1024_ct does not match KAT\n");
+			exit(EXIT_FAILURE);
+		}
+	}
+
 	printf("\nAll known-answer tests (KATs) pass.\n");
 #endif
 }
