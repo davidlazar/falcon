@@ -81,32 +81,32 @@ void test_inner(size_t data_len) {
 
 	int r = falcon_det1024_keygen(&rng, privkey, pubkey);
 	if (r != 0) {
-		fprintf(stderr, "keygen failed: %d\n", r);
+                fprintf(stderr, "keygen (data_len=%zu) failed: %d\n", data_len, r);
 		exit(EXIT_FAILURE);
 	}
 
 	memset(sig, 0, FALCON_DET1024_SIG_COMPRESSED_MAXSIZE);
 	r = falcon_det1024_sign_compressed(sig, &sig_len, privkey, data, data_len);
 	if (r != 0) {
-		fprintf(stderr, "sign_compressed failed: %d\n", r);
+                fprintf(stderr, "sign_compressed (data_len=%zu) failed: %d\n", data_len, r);
 		exit(EXIT_FAILURE);
 	}
 
 	r = falcon_det1024_verify_compressed(sig, sig_len, pubkey, data, data_len);
 	if (r != 0) {
-		fprintf(stderr, "verify_compressed failed: %d\n", r);
+                fprintf(stderr, "verify_compressed (data_len=%zu) failed: %d\n", data_len, r);
 		exit(EXIT_FAILURE);
 	}
 
 	r = falcon_det1024_convert_compressed_to_ct(sigs_ct[data_len], sig, sig_len);
 	if (r != 0) {
-		fprintf(stderr, "conversion failed: %d\n", r);
+                fprintf(stderr, "conversion to CT format (data_len=%zu) failed: %d\n", data_len, r);
 		exit(EXIT_FAILURE);
 	}
 
 	r = falcon_det1024_verify_ct(sigs_ct[data_len], pubkey, data, data_len);
 	if (r != 0) {
-		fprintf(stderr, "verify_ct failed: %d\n", r);
+                fprintf(stderr, "verify_ct (data_len=%zu) failed: %d\n", data_len, r);
 		exit(EXIT_FAILURE);
 	}
 
@@ -119,11 +119,11 @@ void test_inner(size_t data_len) {
 #else  /* compare to the KAT */
 	size_t elen = hextobin(expected_sig, FALCON_DET1024_SIG_COMPRESSED_MAXSIZE, FALCON_DET1024_KAT[data_len]);
 	if (elen != sig_len) {
-		fprintf(stderr, "sign_det1024 (data_len=%zu) does not match KAT\n", data_len);
+          fprintf(stderr, "sign_compressed (data_len=%zu) length %zu does not match KAT length %zu\n", data_len, sig_len, elen);
 		exit(EXIT_FAILURE);
 	}
 	if (memcmp(sig, expected_sig, sig_len) != 0) {
-		fprintf(stderr, "sign_det1024 (data_len=%zu) does not match KAT\n", data_len);
+		fprintf(stderr, "sign_compressed (data_len=%zu) does not match KAT\n", data_len);
 		exit(EXIT_FAILURE);
 	}
 #endif
@@ -158,7 +158,7 @@ int main() {
 	for (int kat = 0; kat < NUM_KATS_CT; kat++) {
 		hextobin(expected_sig_ct, FALCON_DET1024_SIG_CT_SIZE, FALCON_DET1024_KAT_CT[kat]);
 		if (memcmp(sigs_ct[kat], expected_sig_ct, FALCON_DET1024_SIG_CT_SIZE) != 0) {
-			fprintf(stderr, "sign_det1024_ct does not match KAT\n");
+                        fprintf(stderr, "convert_compressed_to_ct (data_len=%d) does not match KAT\n", kat);
 			exit(EXIT_FAILURE);
 		}
 	}
