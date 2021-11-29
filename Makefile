@@ -53,19 +53,19 @@ LIBS = #-lm
 
 OBJ = codec.o common.o deterministic.o falcon.o fft.o fpr.o keygen.o rng.o shake.o sign.o vrfy.o
 
-all: test_deterministic test_falcon speed
+all: tests/test_deterministic tests/test_falcon tests/speed
 
 clean:
-	-rm -f $(OBJ) test_deterministic test_deterministic.o test_falcon test_falcon.o speed speed.o
+	-rm -f $(OBJ) tests/test_deterministic tests/test_deterministic.o tests/test_falcon tests/test_falcon.o tests/speed tests/speed.o
 
-test_deterministic: test_deterministic.o $(OBJ)
-	$(LD) $(LDFLAGS) -o test_deterministic test_deterministic.o $(OBJ) $(LIBS)
+tests/test_deterministic: tests/test_deterministic.o $(OBJ)
+	$(LD) $(LDFLAGS) -o tests/test_deterministic tests/test_deterministic.o $(OBJ) $(LIBS)
 
-test_falcon: test_falcon.o $(OBJ)
-	$(LD) $(LDFLAGS) -o test_falcon test_falcon.o $(OBJ) $(LIBS)
+tests/test_falcon: tests/test_falcon.o $(OBJ)
+	$(LD) $(LDFLAGS) -o tests/test_falcon tests/test_falcon.o $(OBJ) $(LIBS)
 
-speed: speed.o $(OBJ)
-	$(LD) $(LDFLAGS) -o speed speed.o $(OBJ) $(LIBS)
+tests/speed: tests/speed.o $(OBJ)
+	$(LD) $(LDFLAGS) -o tests/speed tests/speed.o $(OBJ) $(LIBS)
 
 codec.o: codec.c config.h inner.h fpr.h
 	$(CC) $(CFLAGS) -c -o codec.o codec.c
@@ -97,14 +97,14 @@ shake.o: shake.c config.h inner.h fpr.h
 sign.o: sign.c config.h inner.h fpr.h
 	$(CC) $(CFLAGS) -c -o sign.o sign.c
 
-speed.o: speed.c falcon.h
-	$(CC) $(CFLAGS) -c -o speed.o speed.c
+tests/speed.o: tests/speed.c falcon.h
+	$(CC) $(CFLAGS) -c -o tests/speed.o tests/speed.c
 
-test_falcon.o: test_falcon.c falcon.h config.h inner.h fpr.h
-	$(CC) $(CFLAGS) -c -o test_falcon.o test_falcon.c
+tests/test_falcon.o: tests/test_falcon.c falcon.h config.h inner.h fpr.h
+	$(CC) $(CFLAGS) -c -o tests/test_falcon.o tests/test_falcon.c
 
-test_deterministic.o: test_deterministic.c deterministic.h falcon.h config.h inner.h fpr.h
-	$(CC) $(CFLAGS) -c -o test_deterministic.o test_deterministic.c
+tests/test_deterministic.o: tests/test_deterministic.c deterministic.h falcon.h config.h inner.h fpr.h
+	$(CC) $(CFLAGS) -c -o tests/test_deterministic.o tests/test_deterministic.c
 
 vrfy.o: vrfy.c config.h inner.h fpr.h
 	$(CC) $(CFLAGS) -c -o vrfy.o vrfy.c

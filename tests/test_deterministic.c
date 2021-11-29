@@ -2,8 +2,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "falcon.h"
-#include "deterministic.h"
+#include "../falcon.h"
+#include "../deterministic.h"
 #include "test_deterministic_kat.h"
 
 // enable in order to generate KATs (pipe output to test_deterministic_kat.h)
