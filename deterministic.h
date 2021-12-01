@@ -15,10 +15,8 @@ extern "C" {
 
 // Replace the 40 byte salt (nonce) with a single byte representing
 // the salt version:
-#define FALCON_DET1024_SIG_COMPRESSED_MAXSIZE \
-  FALCON_SIG_COMPRESSED_MAXSIZE(FALCON_DET1024_LOGN)-40+1
-#define FALCON_DET1024_SIG_CT_SIZE \
-  FALCON_SIG_CT_SIZE(FALCON_DET1024_LOGN)-40+1
+#define FALCON_DET1024_SIG_COMPRESSED_MAXSIZE FALCON_SIG_COMPRESSED_MAXSIZE(FALCON_DET1024_LOGN)-40+1
+#define FALCON_DET1024_SIG_CT_SIZE FALCON_SIG_CT_SIZE(FALCON_DET1024_LOGN)-40+1
 
 // The header bytes for deterministic mode correspond to the headers
 // for ordinary compressed/CT format, but with n=1024 and MSB=1:
@@ -102,7 +100,7 @@ int falcon_det1024_verify_compressed(const void *sig, size_t sig_len,
  * Returned value: 0 on success, or a negative error code.
  */
 int falcon_det1024_verify_ct(const void *sig,
-        const void *pubkey, const void *data, size_t data_len);
+	const void *pubkey, const void *data, size_t data_len);
 
 /*
  * Convert the compressed-format, deterministic-mode (det1024)
@@ -113,7 +111,7 @@ int falcon_det1024_verify_ct(const void *sig,
  * Returned value: 0 on success, or a negative error code.
  */
 int falcon_det1024_convert_compressed_to_ct(void *sig_ct,
-        const void *sig_compressed, size_t sig_compressed_len);
+	const void *sig_compressed, size_t sig_compressed_len);
 
 #ifdef __cplusplus
 }
