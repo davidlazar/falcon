@@ -75,11 +75,17 @@ void test_inner(size_t data_len) {
 	memset(privkey, 0, FALCON_DET1024_PRIVKEY_SIZE);
 	memset(pubkey, 0, FALCON_DET1024_PUBKEY_SIZE);
 
-	shake256_context rng;
-	shake256_init_prng_from_seed(&rng, "seed", 4);
-	shake256_extract(&rng, data, data_len);
+	shake256_context msg_rng;
+	char msg_seed[8+1];
+	sprintf(msg_seed, "msg-%04zu", data_len);
+	shake256_init_prng_from_seed(&msg_rng, msg_seed, 8);
+	shake256_extract(&msg_rng, data, data_len);
 
-	int r = falcon_det1024_keygen(&rng, privkey, pubkey);
+	shake256_context key_rng;
+	char key_seed[8+1];
+	sprintf(key_seed, "key-%04zu", data_len);
+	shake256_init_prng_from_seed(&key_rng, key_seed, 8);
+	int r = falcon_det1024_keygen(&key_rng, privkey, pubkey);
 	if (r != 0) {
 		fprintf(stderr, "keygen (data_len=%zu) failed: %d\n", data_len, r);
 		exit(EXIT_FAILURE);
