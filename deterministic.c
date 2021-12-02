@@ -153,3 +153,7 @@ int falcon_det1024_verify_ct(const void *sig,
 		pubkey, FALCON_DET1024_PUBKEY_SIZE, data, data_len,
 		tmpvv, tmpvv_len);
 }
+
+int falcon_det1024_get_salt_version(const void* sig) {
+	return ((uint8_t*)sig)[1];
+};

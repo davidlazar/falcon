@@ -98,6 +98,12 @@ void test_inner(size_t data_len) {
 		exit(EXIT_FAILURE);
 	}
 
+	int v = falcon_det1024_get_salt_version(sig);
+	if (v != FALCON_DET1024_CURRENT_SALT_VERSION) {
+		fprintf(stderr, "unexpected salt version: %d", v);
+		exit(EXIT_FAILURE);
+	}
+
 	r = falcon_det1024_verify_compressed(sig, sig_len, pubkey, data, data_len);
 	if (r != 0) {
 		fprintf(stderr, "verify_compressed (data_len=%zu) failed: %d\n", data_len, r);
@@ -107,6 +113,12 @@ void test_inner(size_t data_len) {
 	r = falcon_det1024_convert_compressed_to_ct(sigs_ct[data_len], sig, sig_len);
 	if (r != 0) {
 		fprintf(stderr, "conversion to CT format (data_len=%zu) failed: %d\n", data_len, r);
+		exit(EXIT_FAILURE);
+	}
+
+	int vct = falcon_det1024_get_salt_version(sigs_ct[data_len]);
+	if (vct != FALCON_DET1024_CURRENT_SALT_VERSION) {
+		fprintf(stderr, "unexpected salt version: %d", v);
 		exit(EXIT_FAILURE);
 	}
 
