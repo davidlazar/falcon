@@ -99,6 +99,11 @@ func TestFalcon(t *testing.T) {
 			t.Fatalf("verify failed")
 		}
 
+		v := GetSaltVersion(sig)
+		if v != CurrentSaltVersion {
+			t.Fatalf("unexpected salt version: %d", v)
+		}
+
 		badmsg := make([]byte, len(msg))
 		copy(badmsg, msg)
 		// Flip a random bit in the message.

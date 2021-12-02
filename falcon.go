@@ -31,6 +31,8 @@ const (
 	PublicKeySize = C.FALCON_DET1024_PUBKEY_SIZE
 	// PrivateKeySize is the size of a Falcon private key.
 	PrivateKeySize = C.FALCON_DET1024_PRIVKEY_SIZE
+
+	CurrentSaltVersion = C.FALCON_DET1024_CURRENT_SALT_VERSION
 )
 
 type PublicKey []byte
@@ -91,4 +93,8 @@ func VerifyCT(publicKey PublicKey, msg []byte, sig []byte) bool {
 	}
 	r := C.falcon_det1024_verify_ct(unsafe.Pointer(&sig[0]), unsafe.Pointer(&publicKey[0]), data, C.size_t(len(msg)))
 	return r == 0
+}
+
+func GetSaltVersion(sig []byte) int {
+	return int(sig[1])
 }
