@@ -114,7 +114,8 @@ int falcon_det1024_convert_compressed_to_ct(void *sig_ct,
 	const void *sig_compressed, size_t sig_compressed_len);
 
 /*
- * Returns the salt version of a valid signature, either in compressed or CT form.
+ * Returns the salt version of a signature, in either compressed or CT
+ * form.
  */
 int falcon_det1024_get_salt_version(const void* sig);
 
