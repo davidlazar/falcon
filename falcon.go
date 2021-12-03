@@ -38,6 +38,9 @@ const (
 type PublicKey []byte
 type PrivateKey []byte
 
+type CompressedSignature []byte
+type CTSignature []byte
+
 func GenerateKey(seed []byte) (PublicKey, PrivateKey, error) {
 	var rng C.shake256_context
 	C.shake256_init_prng_from_seed(&rng, unsafe.Pointer(&seed[0]), C.size_t(len(seed)))
@@ -53,7 +56,7 @@ func GenerateKey(seed []byte) (PublicKey, PrivateKey, error) {
 	return publicKey, privateKey, nil
 }
 
-func SignCompressed(privateKey PrivateKey, msg []byte) ([]byte, error) {
+func SignCompressed(privateKey PrivateKey, msg []byte) (CompressedSignature, error) {
 	data := C.NULL
 	if len(msg) > 0 {
 		data = unsafe.Pointer(&msg[0])
@@ -68,16 +71,16 @@ func SignCompressed(privateKey PrivateKey, msg []byte) ([]byte, error) {
 	return sig, nil
 }
 
-func ConvertCompressedSigCT(compressedSig []byte) ([]byte, error) {
+func (sig CompressedSignature) ConvertToCT() (CTSignature, error) {
 	sigCT := make([]byte, C.FALCON_DET1024_SIG_CT_SIZE)
-	r := C.falcon_det1024_convert_compressed_to_ct(unsafe.Pointer(&sigCT[0]), unsafe.Pointer(&compressedSig[0]), C.size_t(len(compressedSig)))
+	r := C.falcon_det1024_convert_compressed_to_ct(unsafe.Pointer(&sigCT[0]), unsafe.Pointer(&sig[0]), C.size_t(len(sig)))
 	if r != 0 {
 		return nil, fmt.Errorf("falcon convert failed: %d", int(r))
 	}
 	return sigCT, nil
 }
 
-func VerifyCompressed(publicKey PublicKey, msg []byte, sig []byte) bool {
+func (sig CompressedSignature) Verify(publicKey PublicKey, msg []byte) bool {
 	data := C.NULL
 	if len(msg) > 0 {
 		data = unsafe.Pointer(&msg[0])
@@ -86,7 +89,7 @@ func VerifyCompressed(publicKey PublicKey, msg []byte, sig []byte) bool {
 	return r == 0
 }
 
-func VerifyCT(publicKey PublicKey, msg []byte, sig []byte) bool {
+func (sig CTSignature) Verify(publicKey PublicKey, msg []byte) bool {
 	data := C.NULL
 	if len(msg) > 0 {
 		data = unsafe.Pointer(&msg[0])
@@ -95,6 +98,10 @@ func VerifyCT(publicKey PublicKey, msg []byte, sig []byte) bool {
 	return r == 0
 }
 
-func GetSaltVersion(sig []byte) int {
+func (sig CompressedSignature) SaltVersion() int {
+	return int(sig[1])
+}
+
+func (sig CTSignature) SaltVersion() int {
 	return int(sig[1])
 }

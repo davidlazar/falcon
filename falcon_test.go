@@ -94,12 +94,12 @@ func TestFalcon(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		ok := VerifyCompressed(pub, msg, sig)
+		ok := sig.Verify(pub, msg)
 		if !ok {
 			t.Fatalf("verify failed")
 		}
 
-		v := GetSaltVersion(sig)
+		v := sig.SaltVersion()
 		if v != CurrentSaltVersion {
 			t.Fatalf("unexpected salt version: %d", v)
 		}
@@ -109,7 +109,7 @@ func TestFalcon(t *testing.T) {
 		// Flip a random bit in the message.
 		badmsg[mathrand.Intn(len(msg))] ^= 1 << mathrand.Intn(8)
 
-		ok = VerifyCompressed(pub, badmsg, sig)
+		ok = sig.Verify(pub, badmsg)
 		if ok {
 			t.Fatalf("expected verify to fail on modified message")
 		}
@@ -118,17 +118,17 @@ func TestFalcon(t *testing.T) {
 		copy(badpub, pub)
 		badpub[mathrand.Intn(len(pub))] ^= 1 << mathrand.Intn(8)
 
-		ok = VerifyCompressed(badpub, msg, sig)
+		ok = sig.Verify(badpub, msg)
 		if ok {
 			t.Fatalf("expected verify to fail with modified public key")
 		}
 
-		sigCT, err := ConvertCompressedSigCT(sig)
+		sigCT, err := sig.ConvertToCT()
 		if err != nil {
 			t.Fatal(err)
 		}
 
-		ok = VerifyCT(pub, msg, sigCT)
+		ok = sigCT.Verify(pub, msg)
 		if !ok {
 			t.Fatalf("verify_ct failed")
 		}
