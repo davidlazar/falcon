@@ -1,7 +1,7 @@
 DETERMINISTIC FALCON IMPLEMENTATION
 ===================================
 
-Version: 2021-11-02
+Version: 2021-12-03
 
 Falcon is a post-quantum signature algorithm, submitted to NIST's
 Post-Quantum Cryptography project:
