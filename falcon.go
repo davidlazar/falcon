@@ -92,7 +92,7 @@ func (sig CompressedSignature) ConvertToCT() (CTSignature, error) {
 	return sigCT, nil
 }
 
-// Verify reports whether sig is a valid signature of msg by publicKey.
+// Verify reports whether sig is a valid compressed signature of msg under publicKey.
 func (sig CompressedSignature) Verify(publicKey PublicKey, msg []byte) bool {
 	data := C.NULL
 	if len(msg) > 0 {
@@ -102,7 +102,7 @@ func (sig CompressedSignature) Verify(publicKey PublicKey, msg []byte) bool {
 	return r == 0
 }
 
-// Verify reports whether sig is a valid signature of message by publicKey.
+// Verify reports whether sig is a valid CT signature of msg under publicKey.
 func (sig CTSignature) Verify(publicKey PublicKey, msg []byte) bool {
 	data := C.NULL
 	if len(msg) > 0 {
@@ -112,12 +112,12 @@ func (sig CTSignature) Verify(publicKey PublicKey, msg []byte) bool {
 	return r == 0
 }
 
-// SaltVersion returns the salt version number used to compute the signature.
+// SaltVersion returns the salt version number used in the signature.
 func (sig CompressedSignature) SaltVersion() int {
 	return int(sig[1])
 }
 
-// SaltVersion returns the salt version number used to compute the signature.
+// SaltVersion returns the salt version number used in the signature.
 func (sig CTSignature) SaltVersion() int {
 	return int(sig[1])
 }
